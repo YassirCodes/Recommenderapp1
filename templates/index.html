@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anime Recommendation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        color: #333;
+      }
+      h1 {
+        text-align: center;
+        color: #444;
+      }
+      #current-method {
+        text-align: right;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 20px;
+        padding: 5px 10px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+        display: inline-block;
+        float: right;
+      }
+      #anime-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      .method-btn {
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0 10px;
+        transition: background-color 0.3s ease;
+      }
+      .method-btn:hover {
+        background-color: #2980b9;
+      }
+      #submit-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        font-size: 16px;
+      }
+      #submit-btn:hover {
+        background-color: #27ae60;
+      }
+      #recommendations {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-gap: 20px;
+      }
+      .recommendation {
+        background-color: #f0f0f0; /* Darker background for the card */
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        transition: box-shadow 0.3s ease;
+      }
+      .recommendation:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .recommendation img {
+        max-width: 100%;
+        border-radius: 8px;
+      }
+      .recommendation h3 {
+        font-size: 18px;
+        margin: 10px 0;
+        color: #333;
+      }
+      .recommendation p {
+        font-size: 14px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Anime Recommendation System</h1>
+
+    <!-- Current method display -->
+    <div id="current-method">Current Method: GloVe</div>
+
+    <!-- Recommendation method buttons -->
+    <div class="button-container">
+      <button class="method-btn" data-method="glove">Use GloVe</button>
+      <button class="method-btn" data-method="word2vec">Use Word2Vec</button>
+      <button class="method-btn" data-method="transformer">
+        Use Transformer
+      </button>
+    </div>
+
+    <select id="anime-input"></select>
+    <button id="submit-btn">Get Recommendations</button>
+    <div id="recommendations"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+      let recommendationMethod = "glove"; // Default method
+
+      $(document).ready(function () {
+        $("#anime-input").select2({
+          ajax: {
+            url: "/autocomplete",
+            dataType: "json",
+            delay: 250,
+            data: function (params) {
+              return {
+                q: params.term,
+              };
+            },
+            processResults: function (data) {
+              return {
+                results: data,
+              };
+            },
+            cache: true,
+          },
+          minimumInputLength: 2,
+          placeholder: "Enter an anime name",
+        });
+
+        // Update recommendation method and display it in the #current-method div
+        $(".method-btn").click(function () {
+          recommendationMethod = $(this).data("method");
+          $("#current-method").text(
+            "Current Method: " +
+              recommendationMethod.charAt(0).toUpperCase() +
+              recommendationMethod.slice(1)
+          );
+        });
+      });
+
+      document
+        .getElementById("submit-btn")
+        .addEventListener("click", function () {
+          const animeName = $("#anime-input").select2("data")[0].text;
+          fetch(
+            `/recommend?name=${encodeURIComponent(
+              animeName
+            )}&method=${recommendationMethod}`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              const recommendationsDiv =
+                document.getElementById("recommendations");
+              recommendationsDiv.innerHTML = "";
+              if (data.error) {
+                recommendationsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+              } else {
+                data.forEach((anime) => {
+                  const animeDiv = document.createElement("div");
+                  animeDiv.classList.add("recommendation");
+                  animeDiv.innerHTML = `
+                                <h3>${anime.title_english}</h3>
+                                <p>Score: ${anime.score}</p>`;
+                  recommendationsDiv.appendChild(animeDiv);
+                });
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              document.getElementById("recommendations").innerHTML =
+                "<p>An error occurred while fetching recommendations.</p>";
+            });
+        });
+    </script>
+  </body>
+</html>
