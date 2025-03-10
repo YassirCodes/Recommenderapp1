@@ -14,20 +14,6 @@ The **Anime Recommender System** is a personalized recommendation platform that 
 2. **Word2Vec**: Uses neural networks to create word embeddings, capturing contextual similarities.
 3. **Transformer Models**: Utilizes advanced deep learning architectures for enhanced semantic understanding.
 
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/anime-recommender.git
-   cd anime-recommender
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run the application:
-   ```bash
-   python app.py
-   ```
 
 ## Usage
 1. Select a recommendation model from the available options (GloVe, Word2Vec, Transformer).
